@@ -1,0 +1,27 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+openai==1.59.6
+httpx==0.28.1
+langgraph==0.2.62
+langchain-core==0.3.28
+python-dotenv==1.0.1
+pytest==8.3.4
+pytest-asyncio==0.25.1
+anyio==4.7.0
+
+# PDF ingestion
+pymupdf==1.25.1
+unstructured[pdf]==0.24.1
+
+# Vector search / embeddings
+pgvector==0.3.6
+sentence-transformers==3.3.1
+
+# Misc
+python-multipart==0.0.20
+tiktoken==0.8.0
