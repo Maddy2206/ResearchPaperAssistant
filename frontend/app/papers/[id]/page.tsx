@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -11,11 +12,18 @@ import {
   usePaperIngestStream,
   useAsync,
 } from "@/lib/api";
-import { PdfViewer, type PdfViewerHandle } from "@/components/pdf/pdf-viewer";
+import type { PdfViewerHandle } from "@/components/pdf/pdf-viewer";
 import { ConversationSidebar } from "@/components/history/conversation-sidebar";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
+
+// pdfjs-dist touches browser-only globals (DOMMatrix) at module-evaluation
+// time, which breaks Next.js SSR — load it client-only.
+const PdfViewer = dynamic(
+  () => import("@/components/pdf/pdf-viewer").then((m) => m.PdfViewer),
+  { ssr: false }
+);
 
 export default function PaperWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: paperId } = use(params);

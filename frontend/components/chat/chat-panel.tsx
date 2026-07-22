@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { listMessages, postMessage, useChatStream } from "@/lib/api";
-import type { AgentKey, Message } from "@/lib/types";
+import type { Message } from "@/lib/types";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import type { DisplayMessage } from "./message-bubble";
@@ -32,6 +32,8 @@ export function ChatPanel({
   const stream = useChatStream(conversationId, activeRunId);
 
   useEffect(() => {
+    // Reset loading state when switching conversations, before fetching.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     listMessages(conversationId)
       .then((msgs) => setMessages(msgs.map(toDisplay)))
@@ -41,6 +43,8 @@ export function ChatPanel({
 
   useEffect(() => {
     if (stream.done && activeRunId) {
+      // Commit the finished stream into persisted message state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages((prev) => {
         const withoutPlaceholder = prev.filter((m) => m.id !== `streaming-${activeRunId}`);
         if (stream.error) {

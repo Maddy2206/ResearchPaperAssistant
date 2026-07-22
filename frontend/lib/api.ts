@@ -87,6 +87,8 @@ export function usePaperIngestStream(paperId: string | null) {
 
   useEffect(() => {
     if (!paperId) return;
+    // Reset local state when switching to a new paperId, before subscribing.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDone(false);
     const es = new EventSource(`${API_BASE}/api/papers/${paperId}/ingest/stream`);
 
@@ -132,6 +134,8 @@ export function useChatStream(conversationId: string | null, runId: string | nul
   useEffect(() => {
     if (!conversationId || !runId) return;
     contentRef.current = "";
+    // Reset local state when a new run starts, before subscribing.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({ content: "", streamingAgent: null, agentsUsed: [], citations: [], done: false, error: null });
 
     const es = new EventSource(
@@ -176,13 +180,15 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Generic hook: caller-supplied `deps` array can't be statically verified
+  // as a literal by the linter, but the exhaustive-deps contract still holds.
   const reload = useCallback(() => {
     setLoading(true);
     fn()
       .then((d) => setData(d))
       .catch((e) => setError(e instanceof Error ? e : new Error(String(e))))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   }, deps);
 
   useEffect(() => {

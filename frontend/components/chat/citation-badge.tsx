@@ -15,18 +15,20 @@ export function CitationBadge({
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge
-          variant="secondary"
-          className={clickable ? "cursor-pointer hover:bg-secondary/70" : "cursor-default"}
-          onClick={() => {
-            if (clickable) onClick!(citation.page_number!);
-          }}
-        >
-          [{citation.index}] {citation.section_title ?? "Untitled"}
-          {citation.page_number ? ` · p.${citation.page_number}` : ""}
-        </Badge>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <Badge
+            variant="secondary"
+            className={clickable ? "cursor-pointer hover:bg-secondary/70" : "cursor-default"}
+            onClick={() => {
+              if (clickable) onClick!(citation.page_number!);
+            }}
+          >
+            [{citation.index}] {citation.section_title ?? "Untitled"}
+            {citation.page_number ? ` · p.${citation.page_number}` : ""}
+          </Badge>
+        }
+      />
       <TooltipContent className="max-w-xs text-xs">{citation.snippet}</TooltipContent>
     </Tooltip>
   );
