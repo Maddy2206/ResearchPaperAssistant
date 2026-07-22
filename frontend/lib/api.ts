@@ -55,12 +55,11 @@ export function listConversations(paperId: string): Promise<Conversation[]> {
   return request<Conversation[]>(`/api/papers/${paperId}/conversations`);
 }
 
-export function createConversation(paperId: string, title = "New conversation"): Promise<Conversation> {
-  return request<Conversation>(`/api/papers/${paperId}/conversations`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title }),
-  });
+export function getOrCreateAgentConversation(
+  paperId: string,
+  agentKey: AgentKey
+): Promise<Conversation> {
+  return request<Conversation>(`/api/papers/${paperId}/conversations/by-agent/${agentKey}`);
 }
 
 export function deleteConversation(conversationId: string): Promise<{ deleted: boolean }> {

@@ -69,6 +69,7 @@ export interface Conversation {
   id: string;
   paper_id: string;
   title: string;
+  agent_key: AgentKey;
   created_at: string;
   updated_at: string;
 }

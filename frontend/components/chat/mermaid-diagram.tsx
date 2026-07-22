@@ -12,6 +12,15 @@ function ensureInitialized() {
   initialized = true;
 }
 
+// LLM-generated Mermaid source occasionally has small, mechanical syntax
+// mistakes. Fix the common ones rather than showing a raw parse error.
+function sanitizeMermaidSource(source: string): string {
+  return source
+    // `-->|label|>` / `-->|label|-->` — stray trailing arrow after a pipe label.
+    .replace(/(\|[^|\n]*\|)\s*-*>+/g, "$1")
+    .trim();
+}
+
 export function MermaidDiagram({ source }: { source: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string | null>(null);
@@ -22,7 +31,7 @@ export function MermaidDiagram({ source }: { source: string }) {
     ensureInitialized();
     let cancelled = false;
     mermaid
-      .render(`mermaid-${id}`, source)
+      .render(`mermaid-${id}`, sanitizeMermaidSource(source))
       .then(({ svg }) => {
         if (!cancelled) setSvg(svg);
       })

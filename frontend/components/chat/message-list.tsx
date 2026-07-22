@@ -18,7 +18,11 @@ export function MessageList({
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1 px-4">
+    // min-h-0 is required here: ScrollArea's Root has no overflow of its own
+    // (the scrolling viewport is a child), so without it the flex item's
+    // automatic min-height would stay content-based and it would refuse to
+    // shrink, growing to fit all messages instead of scrolling internally.
+    <ScrollArea className="min-h-0 flex-1 px-4">
       <div className="flex flex-col gap-5 py-4">
         {messages.length === 0 && (
           <p className="mt-10 text-center text-sm text-muted-foreground">

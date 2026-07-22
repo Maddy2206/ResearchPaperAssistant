@@ -7,12 +7,25 @@ from sqlalchemy.orm import selectinload
 from app.db.models import Conversation, Message, MessageRole
 
 
-async def create_conversation(db: AsyncSession, *, paper_id: uuid.UUID, title: str) -> Conversation:
-    conversation = Conversation(paper_id=paper_id, title=title)
+async def create_conversation(
+    db: AsyncSession, *, paper_id: uuid.UUID, title: str, agent_key: str
+) -> Conversation:
+    conversation = Conversation(paper_id=paper_id, title=title, agent_key=agent_key)
     db.add(conversation)
     await db.commit()
     await db.refresh(conversation)
     return conversation
+
+
+async def get_conversation_by_agent(
+    db: AsyncSession, paper_id: uuid.UUID, agent_key: str
+) -> Conversation | None:
+    result = await db.execute(
+        select(Conversation).where(
+            Conversation.paper_id == paper_id, Conversation.agent_key == agent_key
+        )
+    )
+    return result.scalar_one_or_none()
 
 
 async def list_conversations(db: AsyncSession, paper_id: uuid.UUID) -> list[Conversation]:

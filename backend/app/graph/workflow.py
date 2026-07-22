@@ -11,7 +11,7 @@ from app.agents.research_analysis import research_analysis_node
 from app.agents.router import router_node
 from app.agents.state import ChatState
 
-_SPECIALIST_NODES = {
+SPECIALIST_NODES = {
     "research_analysis": research_analysis_node,
     "math_algorithm": math_algorithm_node,
     "results_critique": results_critique_node,
@@ -36,13 +36,13 @@ def get_graph():
 
     builder = StateGraph(ChatState)
     builder.add_node("router", router_node)
-    for key, node_fn in _SPECIALIST_NODES.items():
+    for key, node_fn in SPECIALIST_NODES.items():
         builder.add_node(key, node_fn)
     builder.add_node("aggregate", aggregate_node)
 
     builder.set_entry_point("router")
-    builder.add_conditional_edges("router", _dispatch, list(_SPECIALIST_NODES.keys()))
-    for key in _SPECIALIST_NODES:
+    builder.add_conditional_edges("router", _dispatch, list(SPECIALIST_NODES.keys()))
+    for key in SPECIALIST_NODES:
         builder.add_edge(key, "aggregate")
     builder.add_edge("aggregate", END)
 

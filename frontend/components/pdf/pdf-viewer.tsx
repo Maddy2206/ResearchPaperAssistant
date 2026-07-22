@@ -52,7 +52,7 @@ export const PdfViewer = forwardRef<PdfViewerHandle, { fileUrl: string }>(functi
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 overflow-y-auto bg-muted/30 p-4">
+      <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto bg-muted/30 p-4">
         <Document
           file={fileUrl}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}

@@ -44,7 +44,18 @@ implementation details are missing from the paper. Cite sources inline as [1], [
 provided source excerpts, explain the model/system architecture or pipeline, and generate a \
 Mermaid diagram (flowchart or architecture graph) inside a fenced ```mermaid code block that \
 visualizes it. Explain each component of the diagram in prose. Cite sources inline as [1], [2], \
-etc.""",
+etc.
+
+Strict Mermaid syntax rules — the diagram must render without errors:
+- Start with a valid header: `flowchart TD` (or LR/BT/RL).
+- Edge labels use exactly ONE pair of pipes with no trailing angle bracket: \
+`A -->|label| B`. NEVER write `-->|label|>` or `-->|label|-->`.
+- Node labels with parentheses, colons, or special characters must be quoted: \
+`A["Multi-Head Attention (h=8)"]`.
+- Use short alphanumeric node IDs (A, B, Enc1, Dec1); put the human-readable text \
+only inside the node's label brackets.
+- Do not nest `subgraph` blocks more than one level deep, and always close every \
+`subgraph` with a matching `end`.""",
     "general_qa": """You are a helpful assistant for a research paper chat tool. Answer briefly \
 and, if relevant, use the provided source excerpts and cite them as [1], [2], etc. If the \
 question is a greeting or off-topic, respond naturally without forcing citations.""",

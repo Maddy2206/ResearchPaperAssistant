@@ -10,6 +10,7 @@ from app.db.crud_chat import (
     create_conversation,
     delete_conversation,
     get_conversation,
+    get_conversation_by_agent,
     list_conversations,
     list_messages,
 )
@@ -17,8 +18,9 @@ from app.db.crud_papers import get_paper
 from app.db.models import MessageRole, PaperStatus
 from app.db.session import get_db
 from app.schemas.chat import (
+    AGENT_LABELS,
+    AgentKey,
     ConversationOut,
-    CreateConversationIn,
     CreateMessageIn,
     CreateMessageOut,
     MessageOut,
@@ -29,14 +31,23 @@ from app.services.events import stream as event_stream
 router = APIRouter(tags=["conversations"])
 
 
-@router.post("/api/papers/{paper_id}/conversations", response_model=ConversationOut)
-async def create_conversation_route(
-    paper_id: uuid.UUID, body: CreateConversationIn, db: AsyncSession = Depends(get_db)
+@router.get(
+    "/api/papers/{paper_id}/conversations/by-agent/{agent_key}", response_model=ConversationOut
+)
+async def get_or_create_agent_conversation_route(
+    paper_id: uuid.UUID, agent_key: AgentKey, db: AsyncSession = Depends(get_db)
 ) -> ConversationOut:
+    """Each agent tab has exactly one conversation per paper. Returns the
+    existing one, or creates it on first visit to that tab."""
     paper = await get_paper(db, paper_id)
     if paper is None:
         raise HTTPException(status_code=404, detail="Paper not found")
-    conversation = await create_conversation(db, paper_id=paper_id, title=body.title)
+
+    conversation = await get_conversation_by_agent(db, paper_id, agent_key)
+    if conversation is None:
+        conversation = await create_conversation(
+            db, paper_id=paper_id, title=AGENT_LABELS[agent_key], agent_key=agent_key
+        )
     return ConversationOut.model_validate(conversation)
 
 
@@ -98,6 +109,7 @@ async def post_message_route(
         paper_id=conversation.paper_id,
         user_query=body.content,
         run_id=run_id,
+        forced_agent=conversation.agent_key,
     )
 
     return CreateMessageOut(message_id=user_message.id, run_id=run_id)

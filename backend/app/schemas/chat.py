@@ -40,6 +40,7 @@ class ConversationOut(BaseModel):
     id: uuid.UUID
     paper_id: uuid.UUID
     title: str
+    agent_key: AgentKey
     created_at: datetime
     updated_at: datetime
 
