@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
 
     # --- Database ---
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/research_assistant"
+    # No default: must be set via .env / environment. Avoids ever shipping a
+    # hardcoded credential in tracked code.
+    database_url: str
 
     # --- Storage ---
     storage_dir: str = "/app/storage"

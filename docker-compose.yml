@@ -3,7 +3,7 @@ services:
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file (see .env.example)}
       POSTGRES_DB: ${POSTGRES_DB:-research_assistant}
     ports:
       - "${DB_PORT:-5433}:5432"
@@ -20,7 +20,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-research_assistant}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file (see .env.example)}@db:5432/${POSTGRES_DB:-research_assistant}
     depends_on:
       db:
         condition: service_healthy
