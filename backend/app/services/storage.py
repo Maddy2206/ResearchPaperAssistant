@@ -1,3 +1,4 @@
+import shutil
 import uuid
 from pathlib import Path
 
@@ -35,3 +36,15 @@ async def save_upload(paper_id: uuid.UUID, upload: UploadFile) -> tuple[str, str
 
 def paper_file_path(filename: str) -> Path:
     return papers_dir() / filename
+
+
+def delete_paper_files(paper_id: uuid.UUID, file_path: str) -> None:
+    """Removes the stored PDF and any extracted images for a paper.
+    Best-effort: a missing file is not an error (DB row may already be
+    gone or ingestion may have failed before writing anything)."""
+    pdf_path = Path(file_path)
+    pdf_path.unlink(missing_ok=True)
+
+    images = _storage_root() / "images" / str(paper_id)
+    if images.exists():
+        shutil.rmtree(images, ignore_errors=True)

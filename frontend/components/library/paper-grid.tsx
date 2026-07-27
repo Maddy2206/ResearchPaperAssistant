@@ -6,7 +6,7 @@ import { PaperCard } from "./paper-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function PaperGrid() {
-  const { data: papers, loading } = useAsync(listPapers, []);
+  const { data: papers, loading, reload } = useAsync(listPapers, []);
 
   if (loading) {
     return (
@@ -29,7 +29,7 @@ export function PaperGrid() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {papers.map((paper) => (
-        <PaperCard key={paper.id} paper={paper} />
+        <PaperCard key={paper.id} paper={paper} onDeleted={reload} />
       ))}
     </div>
   );

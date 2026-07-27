@@ -3,14 +3,18 @@
 import { useState, type KeyboardEvent } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, Square } from "lucide-react";
 
 export function MessageInput({
   onSend,
   disabled,
+  streaming,
+  onStop,
 }: {
   onSend: (content: string) => void;
   disabled?: boolean;
+  streaming?: boolean;
+  onStop?: () => void;
 }) {
   const [value, setValue] = useState("");
 
@@ -39,9 +43,15 @@ export function MessageInput({
         rows={1}
         disabled={disabled}
       />
-      <Button onClick={submit} disabled={disabled || !value.trim()} size="icon">
-        <Send className="size-4" />
-      </Button>
+      {streaming ? (
+        <Button onClick={onStop} size="icon" variant="secondary">
+          <Square className="size-3.5 fill-current" />
+        </Button>
+      ) : (
+        <Button onClick={submit} disabled={disabled || !value.trim()} size="icon">
+          <Send className="size-4" />
+        </Button>
+      )}
     </div>
   );
 }

@@ -16,7 +16,7 @@ from app.db.session import get_db
 from app.schemas.papers import PaperDetailOut, PaperOut
 from app.services.events import stream as event_stream
 from app.services.ingestion_runner import spawn_ingestion
-from app.services.storage import save_upload
+from app.services.storage import delete_paper_files, save_upload
 
 router = APIRouter(prefix="/api/papers", tags=["papers"])
 
@@ -73,7 +73,13 @@ async def get_paper_file(paper_id: uuid.UUID, db: AsyncSession = Depends(get_db)
 
 @router.delete("/{paper_id}")
 async def remove_paper(paper_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict:
-    deleted = await delete_paper(db, paper_id)
-    if not deleted:
+    paper = await get_paper(db, paper_id)
+    if paper is None:
         raise HTTPException(status_code=404, detail="Paper not found")
+
+    file_path = paper.file_path
+    await delete_paper(db, paper_id)
+    if file_path:
+        delete_paper_files(paper_id, file_path)
+
     return {"deleted": True}

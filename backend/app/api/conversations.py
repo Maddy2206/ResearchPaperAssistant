@@ -25,6 +25,7 @@ from app.schemas.chat import (
     CreateMessageOut,
     MessageOut,
 )
+from app.services import task_registry
 from app.services.chat_runner import spawn_chat_run
 from app.services.events import stream as event_stream
 
@@ -113,6 +114,14 @@ async def post_message_route(
     )
 
     return CreateMessageOut(message_id=user_message.id, run_id=run_id)
+
+
+@router.post("/api/conversations/{conversation_id}/messages/{run_id}/cancel")
+async def cancel_message_run_route(conversation_id: uuid.UUID, run_id: str) -> dict:
+    cancelled = task_registry.cancel(run_id)
+    if not cancelled:
+        raise HTTPException(status_code=404, detail="Run not found or already finished")
+    return {"cancelled": True}
 
 
 @router.get("/api/conversations/{conversation_id}/messages/{run_id}/stream")

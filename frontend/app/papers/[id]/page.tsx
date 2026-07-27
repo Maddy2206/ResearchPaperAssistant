@@ -4,7 +4,9 @@ import { use, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import {
+  deletePaper,
   getOrCreateAgentConversation,
   getPaper,
   paperFileUrl,
@@ -15,7 +17,19 @@ import type { PdfViewerHandle } from "@/components/pdf/pdf-viewer";
 import { AgentTabs } from "@/components/chat/agent-tabs";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import type { AgentKey } from "@/lib/types";
 
 // pdfjs-dist touches browser-only globals (DOMMatrix) at module-evaluation
@@ -58,6 +72,15 @@ export default function PaperWorkspacePage({ params }: { params: Promise<{ id: s
 
   function handleSelectAgent(agent: AgentKey) {
     router.push(`/papers/${paperId}?agent=${agent}`);
+  }
+
+  async function handleDelete() {
+    try {
+      await deletePaper(paperId);
+      router.push("/");
+    } catch {
+      toast.error("Failed to delete paper");
+    }
   }
 
   if (paperLoading || !paper) {
@@ -106,6 +129,39 @@ export default function PaperWorkspacePage({ params }: { params: Promise<{ id: s
           Library
         </Link>
         <span className="truncate text-sm font-medium">{paper.title || paper.original_filename}</span>
+
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-auto size-7 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            }
+          />
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this paper?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently deletes &quot;{paper.title || paper.original_filename}&quot;,
+                all its extracted chunks, and every conversation with it. This can&apos;t be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleDelete}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">

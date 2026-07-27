@@ -78,6 +78,12 @@ export function postMessage(conversationId: string, content: string): Promise<Cr
   });
 }
 
+export function cancelMessage(conversationId: string, runId: string): Promise<{ cancelled: boolean }> {
+  return request(`/api/conversations/${conversationId}/messages/${runId}/cancel`, {
+    method: "POST",
+  });
+}
+
 // --- Streaming hooks ---
 
 export function usePaperIngestStream(paperId: string | null) {
@@ -117,6 +123,7 @@ interface ChatStreamState {
   citations: Citation[];
   done: boolean;
   error: string | null;
+  agentError: string | null;
 }
 
 export function useChatStream(conversationId: string | null, runId: string | null) {
@@ -127,6 +134,7 @@ export function useChatStream(conversationId: string | null, runId: string | nul
     citations: [],
     done: false,
     error: null,
+    agentError: null,
   });
   const contentRef = useRef("");
 
@@ -135,7 +143,15 @@ export function useChatStream(conversationId: string | null, runId: string | nul
     contentRef.current = "";
     // Reset local state when a new run starts, before subscribing.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({ content: "", streamingAgent: null, agentsUsed: [], citations: [], done: false, error: null });
+    setState({
+      content: "",
+      streamingAgent: null,
+      agentsUsed: [],
+      citations: [],
+      done: false,
+      error: null,
+      agentError: null,
+    });
 
     const es = new EventSource(
       `${API_BASE}/api/conversations/${conversationId}/messages/${runId}/stream`
@@ -149,6 +165,12 @@ export function useChatStream(conversationId: string | null, runId: string | nul
       } else if (data.event === "token") {
         contentRef.current += data.content;
         setState((s) => ({ ...s, content: contentRef.current }));
+      } else if (data.event === "agent_failed") {
+        // The specific agent's LLM call failed (e.g. bad key, rate limit,
+        // provider outage) — the backend still degrades gracefully to a
+        // fallback message via message_completed, but surface the real
+        // cause here so the UI can show it instead of just prose.
+        setState((s) => ({ ...s, agentError: data.error }));
       } else if (data.event === "message_completed") {
         setState((s) => ({
           ...s,

@@ -6,6 +6,7 @@ from app.db.crud_chat import add_message, recent_history
 from app.db.models import MessageRole
 from app.db.session import AsyncSessionLocal
 from app.graph.workflow import SPECIALIST_NODES
+from app.services import task_registry
 from app.services.events import close, publish
 
 
@@ -17,7 +18,8 @@ def spawn_chat_run(
     run_id: str,
     forced_agent: str,
 ) -> None:
-    asyncio.create_task(_run(conversation_id, paper_id, user_query, run_id, forced_agent))
+    task = asyncio.create_task(_run(conversation_id, paper_id, user_query, run_id, forced_agent))
+    task_registry.register(run_id, task)
 
 
 async def _run(
@@ -70,6 +72,31 @@ async def _run(
                 "content": content,
                 "citations": citations,
                 "agents_used": agents_used,
+            },
+        )
+    except asyncio.CancelledError:
+        # User-initiated stop. Persist a placeholder so history stays
+        # consistent across reloads (the partial streamed text some UIs
+        # show is client-side only and isn't recoverable from here).
+        content = "_Generation stopped._"
+        async with AsyncSessionLocal() as db:
+            message = await add_message(
+                db,
+                conversation_id=conversation_id,
+                role=MessageRole.ASSISTANT,
+                content=content,
+                agent_used=[forced_agent],
+                citations=[],
+            )
+        await publish(
+            run_id,
+            {
+                "event": "message_completed",
+                "run_id": run_id,
+                "message_id": str(message.id),
+                "content": content,
+                "citations": [],
+                "agents_used": [forced_agent],
             },
         )
     except Exception as exc:  # noqa: BLE001
