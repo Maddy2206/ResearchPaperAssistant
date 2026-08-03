@@ -62,6 +62,24 @@ question is a greeting or off-topic, respond naturally without forcing citations
 }
 
 
+# Default queries run automatically for every agent tab as soon as a paper
+# finishes ingestion, so each tab already shows an analysis instead of an
+# empty chat window when the user opens it.
+AGENT_KICKOFF_QUERIES: dict[str, str] = {
+    "research_analysis": "Give an executive summary of this paper: its key contributions, "
+    "insights, and findings.",
+    "math_algorithm": "Explain the key mathematical formulations and algorithms presented in "
+    "this paper.",
+    "results_critique": "Summarize the experimental results and critically evaluate the "
+    "paper's strengths and weaknesses.",
+    "paper_to_code": "Provide pseudocode and a PyTorch implementation sketch for this paper's "
+    "core method.",
+    "architecture_flowchart": "Explain the model/system architecture of this paper and "
+    "generate a Mermaid diagram of it.",
+    "general_qa": "Give a brief overview of what this paper is about.",
+}
+
+
 def format_sources(sources: list[dict]) -> str:
     if not sources:
         return "(no relevant source excerpts found)"

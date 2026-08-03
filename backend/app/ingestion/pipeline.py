@@ -14,6 +14,7 @@ from app.ingestion.chunker import build_chunks
 from app.ingestion.extract_pymupdf import extract_with_pymupdf
 from app.ingestion.extract_unstructured import extract_with_unstructured
 from app.ingestion.sectionizer import build_sections
+from app.services.chat_runner import spawn_paper_kickoffs
 from app.services.events import close, publish
 
 
@@ -92,6 +93,7 @@ async def run_ingestion(db: AsyncSession, paper_id: uuid.UUID) -> None:
 
         await update_paper_status(db, paper_id, PaperStatus.READY)
         await publish(key, {"event": "ingestion_completed", "paper_id": key})
+        spawn_paper_kickoffs(paper_id)
 
     except Exception as exc:  # noqa: BLE001
         await update_paper_status(db, paper_id, PaperStatus.FAILED, error_message=str(exc))

@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble, type DisplayMessage } from "./message-bubble";
 
 export function MessageList({
   messages,
   onCitationClick,
+  emptyState,
 }: {
   messages: DisplayMessage[];
   onCitationClick?: (pageNumber: number) => void;
+  emptyState?: ReactNode;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -24,11 +26,12 @@ export function MessageList({
     // shrink, growing to fit all messages instead of scrolling internally.
     <ScrollArea className="min-h-0 flex-1 px-4">
       <div className="flex flex-col gap-5 py-4">
-        {messages.length === 0 && (
-          <p className="mt-10 text-center text-sm text-muted-foreground">
-            Ask a question about this paper to get started.
-          </p>
-        )}
+        {messages.length === 0 &&
+          (emptyState ?? (
+            <p className="mt-10 text-center text-sm text-muted-foreground">
+              Ask a question about this paper to get started.
+            </p>
+          ))}
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} onCitationClick={onCitationClick} />
         ))}

@@ -2,12 +2,51 @@ import asyncio
 import uuid
 
 from app.agents.aggregate import aggregate_node
-from app.db.crud_chat import add_message, recent_history
+from app.db.crud_chat import (
+    add_message,
+    create_conversation,
+    get_conversation_by_agent,
+    list_messages,
+    recent_history,
+)
 from app.db.models import MessageRole
 from app.db.session import AsyncSessionLocal
 from app.graph.workflow import SPECIALIST_NODES
+from app.llm.prompts import AGENT_KICKOFF_QUERIES
+from app.schemas.chat import AGENT_LABELS
 from app.services import task_registry
 from app.services.events import close, publish
+
+
+def spawn_paper_kickoffs(paper_id: uuid.UUID) -> None:
+    """Fires an automatic first analysis for every agent tab as soon as a
+    paper finishes ingestion, so tabs are pre-filled instead of showing an
+    empty chat window on first visit. Skips any agent whose conversation
+    already has messages (e.g. the user already chatted with it)."""
+    asyncio.create_task(_run_kickoffs(paper_id))
+
+
+async def _run_kickoffs(paper_id: uuid.UUID) -> None:
+    targets: list[tuple[uuid.UUID, str, str]] = []
+    async with AsyncSessionLocal() as db:
+        for agent_key, query in AGENT_KICKOFF_QUERIES.items():
+            conversation = await get_conversation_by_agent(db, paper_id, agent_key)
+            if conversation is None:
+                conversation = await create_conversation(
+                    db, paper_id=paper_id, title=AGENT_LABELS[agent_key], agent_key=agent_key
+                )
+            elif await list_messages(db, conversation.id):
+                continue
+            targets.append((conversation.id, agent_key, query))
+
+    for conversation_id, agent_key, query in targets:
+        spawn_chat_run(
+            conversation_id=conversation_id,
+            paper_id=paper_id,
+            user_query=query,
+            run_id=str(uuid.uuid4()),
+            forced_agent=agent_key,
+        )
 
 
 def spawn_chat_run(
